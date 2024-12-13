@@ -1,3 +1,5 @@
+This is a fork of the project trying to extend it to support DIA data inputs as produced by DIA-NN.
+
 # TheDeuteriumCalculator
 The Deuterium Calculator
 # README
