@@ -1,7 +1,7 @@
 # Input Files (Only change the path, not the names or text after the '#' leave the r before the quotes.)
 IDENTIFICATION_MZML_FILE = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Supplementary Files\Input Files\Antigen ID.mzML"  # must be .mzML
 IDENTIFICATION_CSV_FILE = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Supplementary Files\Input Files\Antigen Peptides Library.csv"  # Must be .csv
-PROTEIN_SEQUENCE_FILE = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Supplementary Files\Input Files\Antigen Sequence.txt"  # Must be .txt
+PROTEIN_SEQUENCE_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\Protein.txt"  # Must be .txt
 
 
 # Output Files (Only change the path, not the names or text after the '#' leave the r before the quotes.)
