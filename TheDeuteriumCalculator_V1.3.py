@@ -504,7 +504,8 @@ class FullExperiment:
                 uptakes.append(self.get_uptake(time, complexity, replication)[index])
             stdev = np.std(uptakes, ddof=1)
             row["Uptake SD (D)"] = stdev
-            df = df.append(row, ignore_index=True)
+            #df = df.append(row, ignore_index=True)
+            df.loc[len(df)] = row
         return df
 
     def generate_recommendation_table_2(self):
@@ -1322,80 +1323,76 @@ def main():
     df.to_csv(CON.FULL_HDX_OUTPUT + "_non_D.csv", index=False)
     print("Total Time Elapsed:", datetime.now() - start_time)
     print()
-    try:
-        check_parameters()
-        # Get User Input
-        time_points = get_time_points()
-        is_differential = get_is_differential()
-        num_free_replications = get_num_replications_input(False)
-        if is_differential:
-            num_complex_replications = get_num_replications_input(True)
-        else:
-            num_complex_replications = 0
-        print()
-        menu_input = None
-        while menu_input != 'q':
-            show_menu()
-            try:
-                menu_input = input().strip()[0]
-            except IndexError:
-                pass
-            if menu_input == "0":
-                print("\nProcessing\n")
-                df = pd.read_csv(Non_D)
+    check_parameters()
+    # Get User Input
+    time_points = get_time_points()
+    is_differential = get_is_differential()
+    num_free_replications = get_num_replications_input(False)
+    if is_differential:
+        num_complex_replications = get_num_replications_input(True)
+    else:
+        num_complex_replications = 0
+    print()
+    menu_input = None
+    while menu_input != 'q':
+        show_menu()
+        try:
+            menu_input = input().strip()[0]
+        except IndexError:
+            pass
+        if menu_input == "0":
+            print("\nProcessing\n")
+            df = pd.read_csv(Non_D)
+            recalculate_shift(df)
+            df.to_csv(CON.FULL_HDX_OUTPUT + "_non_D.csv", index=False)
+            print("\nSuccess!\n")
+        if menu_input == '1':
+            start_time = datetime.now()
+            # Perform peak matching and generate output
+            experiment = FullExperiment(time_points, is_differential, num_free_replications, num_complex_replications)
+            experiment.add_file_names()
+            for time in time_points:
+                experiment.add_runs(time)
+            # subtract non-D mass
+            Files = get_file_name(time_points, is_differential, num_free_replications, num_complex_replications)
+            for i in range(len(Files)):
+                df1 = pd.read_csv(Files[i])
+                df2=pd.read_csv(CON.FULL_HDX_OUTPUT + "_non_D.csv")
+                Peptide_count = df1["Sequence"].count()
+                for j in range(Peptide_count):
+                    diff = df1.loc[j, "Shift"] - df2.loc[j, "Shift"]
+                    df1.loc[j, "Shift"] = diff
+                #print(df1.head(10))
+                df1.to_csv(Files[i], index=False)
+            print("Total Time Elapsed:", datetime.now() - start_time)
+        if menu_input == '2':
+            Files = get_file_name(time_points, is_differential, num_free_replications, num_complex_replications)
+            for i in range(len(Files)):
+                print("processing dataset:", str(Files[i]))
+                df = pd.read_csv(Files[i])
                 recalculate_shift(df)
-                df.to_csv(CON.FULL_HDX_OUTPUT + "_non_D.csv", index=False)
-                print("\nSuccess!\n")
-            if menu_input == '1':
-                start_time = datetime.now()
-                # Perform peak matching and generate output
-                experiment = FullExperiment(time_points, is_differential, num_free_replications, num_complex_replications)
-                experiment.add_file_names()
-                for time in time_points:
-                    experiment.add_runs(time)
-                # subtract non-D mass
-                Files = get_file_name(time_points, is_differential, num_free_replications, num_complex_replications)
-                for i in range(len(Files)):
-                    df1 = pd.read_csv(Files[i])
-                    df2=pd.read_csv(CON.FULL_HDX_OUTPUT + "_non_D.csv")
-                    Peptide_count = df1["Sequence"].count()
-                    for j in range(Peptide_count):
-                        diff = df1.loc[j, "Shift"] - df2.loc[j, "Shift"]
-                        df1.loc[j, "Shift"] = diff
-                    #print(df1.head(10))
-                    df1.to_csv(Files[i], index=False)
-                print("Total Time Elapsed:", datetime.now() - start_time)
-            if menu_input == '2':
-                Files = get_file_name(time_points, is_differential, num_free_replications, num_complex_replications)
-                for i in range(len(Files)):
-                    print("processing dataset:", str(Files[i]))
-                    df = pd.read_csv(Files[i])
-                    recalculate_shift(df)
-                    df.to_csv(Files[i], index=False)
-            if menu_input == '3':
-                print("Generating Output files")
-                experiment = FullExperiment(time_points, is_differential, num_free_replications, num_complex_replications)
-                experiment.read_runs()
-                experiment.generate_output()
-                print("\nSuccess!\n")
-            if menu_input == '4':
-                name = input("please input protein name :")
-                print("Converting")
-                File = (CON.RECOMMENDATION_TABLE_1 + ".csv")
-                df1_1 = pd.read_csv(File)  # for free
-                df2_1 = pd.read_csv(File)  # for complex
-                df1 = get_ori_title(df1_1, time_points)
-                df2 = get_ori_title(df2_1, time_points)
-                new_table = get_combined_table(df1, df2)
-                df = get_value(new_table, time_points, name)
-                File2 = (CON.RECOMMENDATION_TABLE_1 + "_" +"DECA Format " + ".csv")
-                df.to_csv(File2, index=False)
-                print("\nSuccess!\n")
-            if menu_input == '5':
-                quit()
-    except AttributeError:
-        print("ERROR: The parameter file seems to be damaged. Please re-download from the source. "
-              "Ensure you do not alter the names of variables")
+                df.to_csv(Files[i], index=False)
+        if menu_input == '3':
+            print("Generating Output files")
+            experiment = FullExperiment(time_points, is_differential, num_free_replications, num_complex_replications)
+            experiment.read_runs()
+            experiment.generate_output()
+            print("\nSuccess!\n")
+        if menu_input == '4':
+            name = input("please input protein name :")
+            print("Converting")
+            File = (CON.RECOMMENDATION_TABLE_1 + ".csv")
+            df1_1 = pd.read_csv(File)  # for free
+            df2_1 = pd.read_csv(File)  # for complex
+            df1 = get_ori_title(df1_1, time_points)
+            df2 = get_ori_title(df2_1, time_points)
+            new_table = get_combined_table(df1, df2)
+            df = get_value(new_table, time_points, name)
+            File2 = (CON.RECOMMENDATION_TABLE_1 + "_" +"DECA Format " + ".csv")
+            df.to_csv(File2, index=False)
+            print("\nSuccess!\n")
+        if menu_input == '5':
+            quit()
 
 
 if __name__ == '__main__':

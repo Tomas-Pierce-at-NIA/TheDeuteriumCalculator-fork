@@ -1,16 +1,16 @@
 # Input Files (Only change the path, not the names or text after the '#' leave the r before the quotes.)
-IDENTIFICATION_MZML_FILE = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Supplementary Files\Input Files\Antigen ID.mzML"  # must be .mzML
-IDENTIFICATION_CSV_FILE = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Supplementary Files\Input Files\Antigen Peptides Library.csv"  # Must be .csv
-PROTEIN_SEQUENCE_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\Protein.txt"  # Must be .txt
+IDENTIFICATION_MZML_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\publicdata\Antigen_ID.mzML"  # must be .mzML
+IDENTIFICATION_CSV_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\publicdata\Antigen_Peptides_Library.csv"  # Must be .csv
+PROTEIN_SEQUENCE_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\publicdata\Antigen_Sequence.txt"  # Must be .txt
 
 
 # Output Files (Only change the path, not the names or text after the '#' leave the r before the quotes.)
-FULL_HDX_OUTPUT = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Test\output"  # No file extension
-RECOMMENDATION_TABLE_1 = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Test\t1"  # No file extension
-RECOMMENDATION_TABLE_2 = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Test\t2"  # No file extension
-SUMMARY_TABLE = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Test\sum"  # No file extension
-WOODS_PLOT_NAME = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Test\f1"  # No file extension
-WOODS_TABLE_NAME = r"D:\Projects\ManuscriptPreparation\2019_Software_development\Final\Test\f1"  # No file extension
+FULL_HDX_OUTPUT = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out1"  # No file extension
+RECOMMENDATION_TABLE_1 = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out2"  # No file extension
+RECOMMENDATION_TABLE_2 = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out3"  # No file extension
+SUMMARY_TABLE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out4"  # No file extension
+WOODS_PLOT_NAME = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out5"  # No file extension
+WOODS_TABLE_NAME = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out6"  # No file extension
 
 
 # Parameters (Only change the numbers and path, not the names or text after the '#'. Defaults given in parenthesis.)
