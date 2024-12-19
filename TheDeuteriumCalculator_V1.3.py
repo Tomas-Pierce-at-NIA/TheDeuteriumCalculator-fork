@@ -730,8 +730,9 @@ class ExperimentalRun:
         with open(file, 'r') as f:
             csv_reader = csv.DictReader(f)
             for row in csv_reader:
-                self.add_peptide(row['Peptide'], float(row['Precursor']),
-                                 int(row['Charge']), float(row["ScanNum"]))
+                #TODO: fix this
+                self.add_peptide(row['Precursor.Id'], float(row['Precursor']),
+                                 int(row['Precursor.Charge']), float(row["ScanID"]))
 
     def process_scan(self, scan):
         retention_time = scan["scanList"]["scan"][0]["scan start time"] * CON.MINUTES_TO_SECONDS
@@ -907,14 +908,15 @@ def read_sequence(string):
 
 ######################################################################
 class Peptide:
-    def __init__(self, sequence, mz, charge, scan):
+    def __init__(self, sequence, mz, charge, retention_time):
         self._windows = []
         self._sequence = read_sequence(sequence)
         self._charge = charge
         self._mass_over_charge = mz
         self._rt_start = 0
         self._rt_end = float("inf")
-        self._scan = scan
+        #self._scan = scan
+        self._retention_time = retention_time
         self._weighted_mass_to_charge = 0
         self._deuterium_dictionary = {}
         self._mass_shift = 0
@@ -1001,8 +1003,6 @@ class Peptide:
             line_list.append(line)
         return line_list
 
-    def get_scan(self):
-        return self._scan
 
     # returns mz, intensity, ppm_error of of one match
     def get_deuterium(self, deuterium):
