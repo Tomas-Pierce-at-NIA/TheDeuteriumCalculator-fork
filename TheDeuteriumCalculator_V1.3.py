@@ -98,11 +98,11 @@ def check_parameters():
         check_directory(file)
     if not check_extension(CON.IDENTIFICATION_MZML_FILE, "mzml"):
         raise NameError("IDENTIFICATION_MZML_FILE must be a .mzml, fix and restart the program.")
-    if not check_extension(CON.IDENTIFICATION_CSV_FILE, "csv"):
-        raise NameError("IDENTIFICATION_CSV_FILE must be a .csv, fix and restart the program.")
+    #if not check_extension(CON.IDENTIFICATION_CSV_FILE, "csv"):
+    #    raise NameError("IDENTIFICATION_CSV_FILE must be a .csv, fix and restart the program.")
     if not check_extension(CON.PROTEIN_SEQUENCE_FILE, "txt"):
         raise NameError("PROTEIN_SEQUENCE_FILE must be a .txt, fix and restart the program.")
-    input_files = [CON.IDENTIFICATION_MZML_FILE, CON.IDENTIFICATION_CSV_FILE, CON.PROTEIN_SEQUENCE_FILE]
+    input_files = [CON.IDENTIFICATION_MZML_FILE, CON.IDENTIFICATION_PARQUET_FILE, CON.PROTEIN_SEQUENCE_FILE]
     for file in input_files:
         if not path.exists(file):
             raise NameError("The following file path is incorrect: {}".format(file))
@@ -727,12 +727,16 @@ class ExperimentalRun:
 
     # adds peptides to peptide_list
     def read_input(self, file: str):
-        with open(file, 'r') as f:
-            csv_reader = csv.DictReader(f)
-            for row in csv_reader:
-                #TODO: fix this
-                self.add_peptide(row['Precursor.Id'], float(row['Precursor']),
+        # tolerate either csv or parquet files
+        if file.endswith('.csv'):
+            table = pd.read_csv(file)
+        elif file.endswith('.parquet'):
+            table = pd.read_parquet(file)
+        for i in range(len(table)):
+            row = table.loc[i]
+            self.add_peptide(row['Precursor.Id'], float(row['Precursor']),
                                  int(row['Precursor.Charge']), float(row["ScanID"]))
+
 
     def process_scan(self, scan):
         retention_time = scan["scanList"]["scan"][0]["scan start time"] * CON.MINUTES_TO_SECONDS
