@@ -734,8 +734,11 @@ class ExperimentalRun:
             table = pd.read_parquet(file)
         for i in range(len(table)):
             row = table.loc[i]
-            self.add_peptide(row['Precursor.Id'], float(row['Precursor']),
-                                 int(row['Precursor.Charge']), float(row["ScanID"]))
+            self.add_peptide(
+                row['Stripped.Sequence'], # should be sequence of fragment
+                float(row['Precursor.Mz']), # should be m/z of fragment
+                int(row['Precursor.Charge']), # should be charge of fragment
+                float(row["RT"])) # should be retention time of fragment
 
 
     def process_scan(self, scan):
@@ -799,8 +802,8 @@ class ExperimentalRun:
         print("Time elapsed:", datetime.now() - start_time, "\n")
         return window_dictionary
 
-    def add_peptide(self, sequence, mz, charge, scan):
-        self.peptides.append(Peptide(sequence, mz, charge, scan))
+    def add_peptide(self, sequence, mz, charge, rt):
+        self.peptides.append(Peptide(sequence, mz, charge, rt))
 
     def iterlists(self, index):
         yield from self.all_peaks[index]["tuple list"]
@@ -851,7 +854,7 @@ class ExperimentalRun:
         matches each deuterium if possible. This ends by writing to an output
         file which contains information on each potential deuteration. This
         should be run for each experimental run."""
-        self.read_input(CON.IDENTIFICATION_CSV_FILE)
+        self.read_input(CON.IDENTIFICATION_PARQUET_FILE)
         self.set_pep_retention_times(identification_file)
         count = 0
         start_time = datetime.now()
