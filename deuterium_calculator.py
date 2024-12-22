@@ -67,18 +67,18 @@ def fit_gaussian(y_data):
 
 def sequence_to_max_deuterium(sequence: str):
     max_deuterium = len(sequence) - 2
-    for letter in sequence:
-        if letter.lower() == 'p':
-            max_deuterium -= 1
+    low_seq = sequence.lower()
+    proline_count = low_seq.count('p')
+    max_deuterium -= proline_count
     return int(max_deuterium * CON.DEUTERIUM_RECOVERY_RATE * CON.DEUTERIUM_FRACTION) + 1
 
 # returns the maximum possible deuterium for a given sequence
 # This is represented as the # of amino acids - 2 - the number of proline molecules  * D2O Fraction.
 def max_deuterium_mlf(sequence: str):
     max_deuterium = len(sequence) - 2
-    for letter in sequence:
-        if letter.lower() == 'p':
-            max_deuterium -= 1
+    low_seq = sequence.lower() # make casing consistent
+    p_count = low_seq.count('p') # count prolines
+    max_deuterium -= p_count # reduce maximum deuterium by number prolines
     max_d_mlf = max_deuterium * CON.DEUTERIUM_FRACTION
     return max_d_mlf
 
@@ -86,9 +86,7 @@ def max_deuterium_mlf(sequence: str):
 def check_output_extension(file: str):
     if "." in file:
         raise NameError("Output files should not have an extension, fix and restart the program.")
-    # for letter in file:
-        # if letter == '.':
-            # raise NameError("Output files should not have an extension, fix and restart the program.")
+
 
 
 # Checks that user PARAMETER configuration is (relatively) correct
@@ -723,8 +721,10 @@ class ExperimentalRun:
     def set_pep_retention_times(self, file: str):
         conversion_dictionary = set_retention_times(file)
         for pep in self.peptides:
-            scan = pep.get_scan()
-            rt = conversion_dictionary[scan]
+            #breakpoint()
+            #scan = pep.get_scan()
+            rt = pep.get_retention_time()
+            #rt = conversion_dictionary[scan]
             pep.set_retention_times(rt - CON.RETENTION_TOLERANCE, rt + CON.RETENTION_TOLERANCE)
 
     # adds peptides to peptide_list
@@ -950,6 +950,10 @@ class Peptide:
         print("Mass Shift:", self._mass_shift)
 
     # Getters
+    
+    def get_retention_time(self):
+        return self._retention_time
+    
     def get_fit(self):
         return self._fit
 
