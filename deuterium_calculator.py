@@ -84,9 +84,11 @@ def max_deuterium_mlf(sequence: str):
 
 
 def check_output_extension(file: str):
-    for letter in file:
-        if letter == '.':
-            raise NameError("Output files should not have an extension, fix and restart the program.")
+    if "." in file:
+        raise NameError("Output files should not have an extension, fix and restart the program.")
+    # for letter in file:
+        # if letter == '.':
+            # raise NameError("Output files should not have an extension, fix and restart the program.")
 
 
 # Checks that user PARAMETER configuration is (relatively) correct
