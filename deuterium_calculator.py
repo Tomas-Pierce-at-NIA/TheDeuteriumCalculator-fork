@@ -20,13 +20,6 @@ def check_directory(file_path: str):
     directory = path.parent
     if not directory.exists():
         raise FileExistsError("ERROR: Output directory does not exist")
-    # end_path = 0
-    # for index, char in enumerate(file_path):
-        # if char == '\\' or char == '/':
-            # end_path = index
-    # if end_path > 0:
-        # if not path.exists(file_path[0:end_path]):
-            # raise FileExistsError("ERROR: Output directory does not exit.")
 
 
 # returns a gaussian with the given parameters
@@ -130,10 +123,7 @@ def check_parameters():
 
 def check_extension(string, extension):
     # helper function for check_parameters()
-    if string[-len(extension):].lower() != extension:
-        return False
-    else:
-        return True
+    return string.lower().endswith(extention)
 
 
 # Gets user input of path and changes it to usable string
@@ -518,9 +508,10 @@ class FullExperiment:
                   "HDX time (s)", "Uptake (D)", "Uptake SD (D)"]
         df = pd.DataFrame(columns=header)
         for time in self._time_points:
-            df = self.generate_rows(df, time, False)
             if self._is_differential:
                 df = self.generate_rows(df, time, True)
+            else:
+                df = self.generate_rows(df, time, False)
         df.to_csv(CON.RECOMMENDATION_TABLE_2 + ".csv", index=False)
 
     def generate_summary_table(self):
