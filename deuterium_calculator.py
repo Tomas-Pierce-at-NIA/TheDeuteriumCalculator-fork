@@ -123,7 +123,7 @@ def check_parameters():
 
 def check_extension(string, extension):
     # helper function for check_parameters()
-    return string.lower().endswith(extention)
+    return string.lower().endswith(extension)
 
 
 # Gets user input of path and changes it to usable string
