@@ -9,19 +9,24 @@ from datetime import datetime
 from os import path
 from matplotlib import pyplot as plt
 import warnings
+import pathlib
 warnings.filterwarnings("ignore", message="Covariance of the parameters could not be estimated")
 SLIDE_AMOUNT = CON.SLIDING_WINDOW_SIZE / CON.SLIDE_FRACTION
 
 
 # checks whether an output directory exists, ignores actual filename
-def check_directory(file_path):
-    end_path = 0
-    for index, char in enumerate(file_path):
-        if char == '\\' or char == '/':
-            end_path = index
-    if end_path > 0:
-        if not path.exists(file_path[0:end_path]):
-            raise FileExistsError("ERROR: Output directory does not exit.")
+def check_directory(file_path: str):
+    path = pathlib.Path(file_path)
+    directory = path.parent
+    if not directory.exists():
+        raise FileExistsError("ERROR: Output directory does not exist")
+    # end_path = 0
+    # for index, char in enumerate(file_path):
+        # if char == '\\' or char == '/':
+            # end_path = index
+    # if end_path > 0:
+        # if not path.exists(file_path[0:end_path]):
+            # raise FileExistsError("ERROR: Output directory does not exit.")
 
 
 # returns a gaussian with the given parameters
@@ -269,16 +274,16 @@ def compare(target, charge, array, full_array):
 
 
 # Converts scan number to retention time using the mzml file
-def set_retention_times(file: str):
-    retention_scan_dictionary = {}
-    with mzml.read(file) as f:
-        for scan in f:
-            if scan["ms level"] == 2:
-                scan_time = float(scan["scanList"]["scan"][0]["scan start time"])
-                scan_time = (scan_time - CON.RETENTION_SHIFT_INTERCEPT) / CON.RETENTION_SHIFT_SLOPE
-                scan_time *= CON.MINUTES_TO_SECONDS
-                retention_scan_dictionary[scan["index"] + 1] = scan_time
-    return retention_scan_dictionary
+# def set_retention_times(file: str):
+#     retention_scan_dictionary = {}
+#     with mzml.read(file) as f:
+#         for scan in f:
+#             if scan["ms level"] == 2:
+#                 scan_time = float(scan["scanList"]["scan"][0]["scan start time"])
+#                 scan_time = (scan_time - CON.RETENTION_SHIFT_INTERCEPT) / CON.RETENTION_SHIFT_SLOPE
+#                 scan_time *= CON.MINUTES_TO_SECONDS
+#                 retention_scan_dictionary[scan["index"] + 1] = scan_time
+#     return retention_scan_dictionary
 
 
 #################################################################################################
@@ -719,7 +724,7 @@ class ExperimentalRun:
 
     # converts peptide scan number to retention times
     def set_pep_retention_times(self, file: str):
-        conversion_dictionary = set_retention_times(file)
+        #conversion_dictionary = set_retention_times(file)
         for pep in self.peptides:
             #breakpoint()
             #scan = pep.get_scan()
@@ -925,7 +930,8 @@ class Peptide:
         self._rt_start = 0
         self._rt_end = float("inf")
         #self._scan = scan
-        self._retention_time = retention_time
+        # take input of retention time in minutes and do math in seconds
+        self._retention_time = retention_time * CON.MINUTES_TO_SECONDS
         self._weighted_mass_to_charge = 0
         self._deuterium_dictionary = {}
         self._mass_shift = 0
