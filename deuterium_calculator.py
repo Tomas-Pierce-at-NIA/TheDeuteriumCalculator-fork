@@ -128,14 +128,9 @@ def check_extension(string, extension):
 
 # Gets user input of path and changes it to usable string
 def get_path_input():
-    input_path = r"{}".format(input())
-    compatible_path = ""
-    for letter in input_path:
-        if letter == '\\':
-            compatible_path += '\\'
-        if letter != '"':
-            compatible_path += letter
-    return compatible_path
+    input_path = input()
+    return input_path.strip('"')
+
 
 
 # Determines the location of the sequence within the full protein
