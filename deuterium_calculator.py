@@ -1,3 +1,7 @@
+
+import os
+os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
+
 import numpy as np
 import pandas as pd
 import csv
@@ -98,6 +102,8 @@ def check_parameters():
         raise NameError("IDENTIFICATION_MZML_FILE must be a .mzml, fix and restart the program.")
     #if not check_extension(CON.IDENTIFICATION_CSV_FILE, "csv"):
     #    raise NameError("IDENTIFICATION_CSV_FILE must be a .csv, fix and restart the program.")
+    if not check_extension(CON.IDENTIFICATION_PARQUET_FILE, "parquet"):
+        raise NameError("IDENTIFICATION_PARQUET_FILE must be a .parquet, fix and restart the program")
     if not check_extension(CON.PROTEIN_SEQUENCE_FILE, "txt"):
         raise NameError("PROTEIN_SEQUENCE_FILE must be a .txt, fix and restart the program.")
     input_files = [CON.IDENTIFICATION_MZML_FILE, CON.IDENTIFICATION_PARQUET_FILE, CON.PROTEIN_SEQUENCE_FILE]
@@ -156,21 +162,18 @@ def find_start_end(peptide: str, protein: str):
     return "NULL", "NULL"
 
 
-# Removes any non-alpha characters from the protein sequence
+
+# Returns the ppm difference between two m/z values
 def get_ppm(mz1, mz2):
     return abs(mz1 - mz2) / mz1 * 1000000
 
-
+# Removes any non-alpha characters from the protein sequence
 def parse_protein(file: str):
-    sequence = ""
     with open(file, 'r') as f:
-        file_reader = f.readlines()
-        for line in file_reader:
-            for character in line:
-                if character.isalpha():
-                    sequence += character
+        text = f.read()
+        sequence = "".join([character for character in text if character.isalpha()])
     return sequence
-# Returns the ppm difference between two m/z values
+
 
 
 # Takes in a list of tuples and combines each where first elements is within a ppm tolerance
@@ -1306,6 +1309,7 @@ def show_menu():
 ##############################################################################
 def main():
     ###################### Generate non_D mass file
+    breakpoint()
     time_points = [-10]
     is_differential = False
     num_free_replications = 1
