@@ -179,13 +179,15 @@ def parse_protein(file: str):
 # Takes in a list of tuples and combines each where first elements is within a ppm tolerance
 # This is used to combine peaks of the exact same mz in consecutive nearby scans.
 def tuple_combine(some_list):
+    
     changed = True
     just_changed = False
     start_list = sorted(some_list, key=lambda x: x[0])
     new_list = []
-    for i in range(len(start_list)):
-        tup = (start_list[i][0], start_list[i][1], 1)
-        start_list[i] = tup
+    
+    # [(m/z, intensity, count) ... ]
+    begin_list = [(start[0], start[1], 1) for start in start_list]
+    start_list = begin_list
 
     while changed and len(start_list) != 0:
         changed = False
@@ -262,16 +264,16 @@ def compare(target, charge, array, full_array):
 
 
 # Converts scan number to retention time using the mzml file
-# def set_retention_times(file: str):
-#     retention_scan_dictionary = {}
-#     with mzml.read(file) as f:
-#         for scan in f:
-#             if scan["ms level"] == 2:
-#                 scan_time = float(scan["scanList"]["scan"][0]["scan start time"])
-#                 scan_time = (scan_time - CON.RETENTION_SHIFT_INTERCEPT) / CON.RETENTION_SHIFT_SLOPE
-#                 scan_time *= CON.MINUTES_TO_SECONDS
-#                 retention_scan_dictionary[scan["index"] + 1] = scan_time
-#     return retention_scan_dictionary
+def set_retention_times(file: str):
+    retention_scan_dictionary = {}
+    with mzml.read(file) as f:
+        for scan in f:
+            if scan["ms level"] == 2:
+                scan_time = float(scan["scanList"]["scan"][0]["scan start time"])
+                scan_time = (scan_time - CON.RETENTION_SHIFT_INTERCEPT) / CON.RETENTION_SHIFT_SLOPE
+                scan_time *= CON.MINUTES_TO_SECONDS
+                retention_scan_dictionary[scan["index"] + 1] = scan_time
+    return retention_scan_dictionary
 
 
 #################################################################################################
@@ -749,8 +751,7 @@ class ExperimentalRun:
     # list with tuples containing the m/z and intensity
     def read_mzml(self, file: str):
         total = 0
-        print()
-        print("(initializing)")
+        print("\n(initializing)")
         with mzml.read(file) as f:
             for scan in f:
                 if scan["ms level"] == 1:
@@ -775,18 +776,21 @@ class ExperimentalRun:
         start_time = datetime.now()
         start = 0
         stop = CON.SLIDING_WINDOW_SIZE
-        windows = []
-        for i in range(window_count):
-            windows.append((start, stop))
-            start += SLIDE_AMOUNT
-            stop += SLIDE_AMOUNT
+        
+        starts = range(0, int(window_count * SLIDE_AMOUNT), int(SLIDE_AMOUNT))
+        ends = range(CON.SLIDING_WINDOW_SIZE, int(window_count * SLIDE_AMOUNT + CON.SLIDING_WINDOW_SIZE), int(SLIDE_AMOUNT))
+        windows = zip(starts, ends)
+        # for i in range(window_count):
+            # windows.append((start, stop))
+            # start += SLIDE_AMOUNT
+            # stop += SLIDE_AMOUNT
+        #breakpoint()
         window_dictionary = {}
         for window in windows:
-            key = window
-            window_dictionary[key] = []
+            window_dictionary[window] = []
             for dictionary in self.all_peaks:
                 if window[0] <= dictionary["retention time"] < window[1]:
-                    window_dictionary[key].extend(dictionary["tuple list"])
+                    window_dictionary[window].extend(dictionary["tuple list"])
         ret = ((retention_time // CON.SLIDING_WINDOW_SIZE) + 1) * CON.SLIDING_WINDOW_SIZE
         print("(Sliding Window)")
         print("RT {}s / {}s".format(0, int(ret)))
@@ -930,6 +934,7 @@ class Peptide:
         self._average_mass = 0
         self.set_average_mass()
         self._protein = parse_protein(CON.PROTEIN_SEQUENCE_FILE)
+        breakpoint()
         self._start, self._end = find_start_end(self._sequence, self._protein)
         self._fit = 0  # Gaussian fit
 
