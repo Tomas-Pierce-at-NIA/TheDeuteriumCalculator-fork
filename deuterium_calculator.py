@@ -9,6 +9,7 @@ from scipy.optimize import curve_fit
 from scipy import stats
 import PARAMETERS as CON
 from pyteomics import mzml
+from pyteomics import mass
 from datetime import datetime
 from os import path
 from matplotlib import pyplot as plt
@@ -877,7 +878,7 @@ class ExperimentalRun:
             if not output_exists:
                 header = ["Start", "End", "Sequence", "Charge", "SequenceMz", "Condition",
                           "Deuterium", "RT", "Mz", "Intensity", "PpmError", "Average", "Shift",
-                          "Gaussian Fit"]
+                          "Gaussian Fit", "Monoisotopic Mass"]
                 csv_writer.writerow(header)
             lines = []
             for pep in self.peptides:
@@ -934,9 +935,19 @@ class Peptide:
         self._average_mass = 0
         self.set_average_mass()
         self._protein = parse_protein(CON.PROTEIN_SEQUENCE_FILE)
-        breakpoint()
+        #breakpoint()
         self._start, self._end = find_start_end(self._sequence, self._protein)
         self._fit = 0  # Gaussian fit
+        
+        self.__monoisotopic_mass = mass.fast_mass(sequence)
+    
+    @property
+    def monoisotopic_mass(self):
+        return self.__monoisotopic_mass
+    
+    @monoisotopic_mass.setter
+    def monoisotopic_mass(self, monoisotopic_mass):
+        self.__monoisotopic_mass = monoisotopic_mass
 
     def __str__(self):
         self.__repr__()
@@ -948,6 +959,7 @@ class Peptide:
         print("Max Deuterium:", self.get_max_deuterium())
         print("Fit:", self._fit)
         print("Mass Shift:", self._mass_shift)
+        print("Monoisotopic mass:" self.monoisotopic_mass)
 
     # Getters
     
@@ -998,7 +1010,7 @@ class Peptide:
         for i in range(self.get_max_deuterium() + 1):
 
             mz, intensity, ppm = self.get_deuterium(i)
-            line = ["", "", "", 0, 0, "", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+            line = ["", "", "", 0, 0, "", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             line[0] = self._start
             line[1] = self._end
             line[2] = self._sequence
@@ -1013,6 +1025,7 @@ class Peptide:
             line[11] = self._weighted_mass_to_charge
             line[12] = self._mass_shift
             line[13] = self._fit
+            line[14] = self.monoisotopic_mass
             line_list.append(line)
         return line_list
 
@@ -1314,7 +1327,7 @@ def show_menu():
 ##############################################################################
 def main():
     ###################### Generate non_D mass file
-    breakpoint()
+    #breakpoint()
     time_points = [-10]
     is_differential = False
     num_free_replications = 1
