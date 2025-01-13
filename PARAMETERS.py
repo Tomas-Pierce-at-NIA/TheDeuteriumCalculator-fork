@@ -1,5 +1,5 @@
 # Input Files (Only change the path, not the names or text after the '#' leave the r before the quotes.)
-IDENTIFICATION_MZML_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\DIA\For ID Run_20240427_HeLa-lysate_5ug_DIA-T1_Good.mzML"  # must be .mzML
+IDENTIFICATION_MZML_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\DIA\revised_idrun\20240427_HeLa-lysate_5ug_DIA-T2_Good.mzML"  # must be .mzML
 PROTEIN_SEQUENCE_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\Protein.txt"  # Must be .txt
 IDENTIFICATION_PARQUET_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\DIA\diann_outputs\hela_ex.parquet" # should be .parquet
 

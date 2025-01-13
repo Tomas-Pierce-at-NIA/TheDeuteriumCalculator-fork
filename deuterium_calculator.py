@@ -959,7 +959,7 @@ class Peptide:
         print("Max Deuterium:", self.get_max_deuterium())
         print("Fit:", self._fit)
         print("Mass Shift:", self._mass_shift)
-        print("Monoisotopic mass:" self.monoisotopic_mass)
+        print("Monoisotopic mass:", self.monoisotopic_mass)
 
     # Getters
     
