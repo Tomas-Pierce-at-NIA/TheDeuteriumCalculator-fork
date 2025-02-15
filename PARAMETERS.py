@@ -1,16 +1,16 @@
 # Input Files (Only change the path, not the names or text after the '#' leave the r before the quotes.)
-IDENTIFICATION_MZML_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\DIA\revised_idrun\20240427_HeLa-lysate_5ug_DIA-T2_Good.mzML"  # must be .mzML
+IDENTIFICATION_MZML_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\testdataDIA\20240427_HeLa-lysate_5ug_DIA-T2_Good.mzML"  # must be .mzML
 PROTEIN_SEQUENCE_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\Protein.txt"  # Must be .txt
-IDENTIFICATION_PARQUET_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\DIA\diann_outputs\hela_ex.parquet" # should be .parquet
+IDENTIFICATION_PARQUET_FILE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\testdataDIA\diann_res\hela_ex.parquet" # should be .parquet
 
 
 # Output Files (Only change the path, not the names or text after the '#' leave the r before the quotes.)
-FULL_HDX_OUTPUT = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out1"  # No file extension
-RECOMMENDATION_TABLE_1 = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out2"  # No file extension
-RECOMMENDATION_TABLE_2 = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out3"  # No file extension
-SUMMARY_TABLE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out4"  # No file extension
-WOODS_PLOT_NAME = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out5"  # No file extension
-WOODS_TABLE_NAME = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\The Deuterium Calculator Test Files\out\out6"  # No file extension
+FULL_HDX_OUTPUT = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\testDIAdata2out\out1"  # No file extension
+RECOMMENDATION_TABLE_1 = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\testDIAdata2out\out2"  # No file extension
+RECOMMENDATION_TABLE_2 = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\testDIAdata2out\out3"  # No file extension
+SUMMARY_TABLE = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\testDIAdata2out\out4"  # No file extension
+WOODS_PLOT_NAME = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\testDIAdata2out\out5"  # No file extension
+WOODS_TABLE_NAME = r"C:\Users\piercetf\Projects\TheDeuteriumCalculator-fork\testDIAdata2out\out6"  # No file extension
 
 
 # Parameters (Only change the numbers and path, not the names or text after the '#'. Defaults given in parenthesis.)
