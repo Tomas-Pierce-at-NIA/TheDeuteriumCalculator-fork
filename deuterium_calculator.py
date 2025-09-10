@@ -142,6 +142,7 @@ def get_path_input():
 
 # Determines the location of the sequence within the full protein
 def find_start_end(peptide: str, protein: str):
+    breakpoint()
     sequential_matches = 0
     start, end = 0, 0
     index = 0
