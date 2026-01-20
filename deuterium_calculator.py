@@ -160,7 +160,6 @@ def find_start_end(peptide: str, protein: str):
             else:
                 index += 1
             sequential_matches = 0
-    breakpoint()
     return "NULL", "NULL"
 
 
@@ -719,7 +718,6 @@ class ExperimentalRun:
     def set_pep_retention_times(self, file: str):
         #conversion_dictionary = set_retention_times(file)
         for pep in self.peptides:
-            #breakpoint()
             #scan = pep.get_scan()
             rt = pep.get_retention_time()
             #rt = conversion_dictionary[scan]
@@ -786,7 +784,6 @@ class ExperimentalRun:
             # windows.append((start, stop))
             # start += SLIDE_AMOUNT
             # stop += SLIDE_AMOUNT
-        #breakpoint()
         window_dictionary = {}
         for window in windows:
             window_dictionary[window] = []
@@ -936,7 +933,6 @@ class Peptide:
         self._average_mass = 0
         self.set_average_mass()
         self._protein = parse_protein(CON.PROTEIN_SEQUENCE_FILE)
-        #breakpoint()
         self._start, self._end = find_start_end(self._sequence, self._protein)
         self._fit = 0  # Gaussian fit
         
@@ -1328,7 +1324,6 @@ def show_menu():
 ##############################################################################
 def main():
     ###################### Generate non_D mass file
-    #breakpoint()
     time_points = [-10]
     is_differential = False
     num_free_replications = 1
