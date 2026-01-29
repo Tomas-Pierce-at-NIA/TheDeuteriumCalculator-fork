@@ -15,6 +15,9 @@ from os import path
 from matplotlib import pyplot as plt
 import warnings
 import pathlib
+
+from unimod_lookup import UniMod
+
 warnings.filterwarnings("ignore", message="Covariance of the parameters could not be estimated")
 SLIDE_AMOUNT = CON.SLIDING_WINDOW_SIZE / CON.SLIDE_FRACTION
 
@@ -733,7 +736,7 @@ class ExperimentalRun:
         for i in range(len(table)):
             row = table.loc[i]
             self.add_peptide(
-                row['Stripped.Sequence'], # should be sequence of fragment
+                row['Modified.Sequence'], # should be sequence of fragment
                 float(row['Precursor.Mz']), # should be m/z of fragment
                 int(row['Precursor.Charge']), # should be charge of fragment
                 float(row["RT"])) # should be retention time of fragment
@@ -1082,10 +1085,36 @@ class Peptide:
     def set_average_mass(self):
         mass = 0
         for amino in self._sequence:
-            mass += CON.PEPTIDE_MASS_DICTIONARY[amino]
+            if amino in CON.PEPTIDE_MASS_DICTIONARY:
+                mass += CON.PEPTIDE_MASS_DICTIONARY[amino]
+            else:
+                
+                breakpoint()
         mass += CON.MASS_OF_WATER
         self._average_mass = mass
 
+class ModifiedMassComputer:
+    """
+    parses peptide string with (modified:tag) kind codes and computes their 
+    average mass taking into account the modification
+    """
+    
+    unimod = UniMod.default()
+    
+    def __init__(self, umod=None):
+        if umod is not None:
+            self.uni_db = umod
+        else:
+            self.uni_db = self.unimod
+    
+    def parse(self, peptide :str):
+        """
+        parse each peptide, whether modified or not,
+        into a generator sequence of corresponding mass values
+        based on the parameters file and the modification database
+        """
+        curr_idx = 0
+        
 
 def get_time_points():
     num_time_points = 0
