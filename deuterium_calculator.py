@@ -1130,7 +1130,7 @@ class ModifiedMassComputer:
                 mod_match = self.mod_matcher.match(modtag)
                 mod_id = mod_match.groups()[0]
                 modification = self.uni_db[mod_id]
-                mod_avg_mass = modification["avge_mass"]
+                mod_avg_mass = float(modification["avge_mass"])
                 # get the peptide being modified and its mass
                 curr_idx = end_modtag+1
                 pep_sym = peptide[curr_idx]
