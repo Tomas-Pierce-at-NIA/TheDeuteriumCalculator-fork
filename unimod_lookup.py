@@ -7,6 +7,8 @@ class UniMod(Mapping):
     "lookup table for UniMod-labeled modifications"
     namespaces = {'unimod': 'http://www.unimod.org/xmlns/schema/unimod_tables_1'}
     
+    __default = None
+    
     def __init__(self, filepath :Path):
         self.path = filepath
         self.tree = ElementTree()
@@ -27,9 +29,11 @@ class UniMod(Mapping):
     
     @classmethod
     def default(cls):
-        unimod = Path(__file__).parent / "unimod"
-        table_filename = unimod / "unimod_tables.xml"
-        return cls(table_filename)
+        if cls.__default is None:
+            unimod = Path(__file__).parent / "unimod"
+            table_filename = unimod / "unimod_tables.xml"
+            cls.__default = cls(table_filename)
+        return cls.__default
     
     def get_mod_rows(self):
         root = self.tree.getroot()
