@@ -1551,11 +1551,4 @@ def main():
 
 
 if __name__ == '__main__':
-    import cProfile
-    profile = cProfile.Profile()
-    profile.enable()
-    try:
-        main()
-    finally:
-        profile.disable()
-        profile.dump_stats("dcalc.prof")
+    main()
