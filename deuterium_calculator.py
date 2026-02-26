@@ -934,14 +934,16 @@ class Peptide:
         self.max_deuterium = sequence_to_max_deuterium(self._sequence)
         for det in range(self.max_deuterium + 1):
             self._deuterium_dictionary[det] = {"m/z": 0, "intensity": 0, "ppm": 0}
-        self._average_mass = 0
-        self.set_average_mass()
+        #self._average_mass = 0
+        #self.set_average_mass()
+        mmc = ModifiedMassComputer()
+        self._average_mass = mmc.compute_mass_avg(sequence)
         self._protein = parse_protein(CON.PROTEIN_SEQUENCE_FILE)
         self._start, self._end = find_start_end(self._sequence, self._protein)
         self._fit = 0  # Gaussian fit
         
         #self.__monoisotopic_mass = mass.fast_mass(sequence)
-        self.__monoisotopic_mass = ModifiedMassComputer().compute_mass_monoisotopic(sequence)
+        self.__monoisotopic_mass = mmc.compute_mass_monoisotopic(sequence)
     
     @property
     def monoisotopic_mass(self):
@@ -1066,6 +1068,7 @@ class Peptide:
         self._rt_end = end
 
     def set_weighted_mass(self):
+        #breakpoint()
         total_intensity = 0
         mass = 0
         for det in self._deuterium_dictionary.keys():
@@ -1085,6 +1088,7 @@ class Peptide:
 
     # calculates the average mass from the sequence (Uses values in the PARAMETERS.py file)
     def set_average_mass(self):
+        # this entire function is potentially removable
         # mass = 0
         # for amino in self._sequence:
             # if amino in CON.PEPTIDE_MASS_DICTIONARY:
@@ -1095,7 +1099,9 @@ class Peptide:
         # mass += CON.MASS_OF_WATER
         # self._average_mass = mass
         mass_computer = ModifiedMassComputer()
-        return mass_computer.compute_mass_avg(self._sequence)
+        avg_mass = mass_computer.compute_mass_avg(self._sequence)
+        self._average_mass = avg_mass # this is important
+        return self._average_mass # this is dispensable
 
 class ModifiedMassComputer:
     """
@@ -1455,6 +1461,7 @@ def show_menu():
 
 ##############################################################################
 def main():
+    #breakpoint()
     ###################### Generate non_D mass file
     time_points = [-10]
     is_differential = False
@@ -1502,6 +1509,7 @@ def main():
             df.to_csv(CON.FULL_HDX_OUTPUT + "_non_D.csv", index=False)
             print("\nSuccess!\n")
         if menu_input == '1':
+            #breakpoint()
             start_time = datetime.now()
             # Perform peak matching and generate output
             experiment = FullExperiment(time_points, is_differential, num_free_replications, num_complex_replications)
@@ -1515,6 +1523,7 @@ def main():
                 df2=pd.read_csv(CON.FULL_HDX_OUTPUT + "_non_D.csv")
                 Peptide_count = df1["Sequence"].count()
                 for j in range(Peptide_count):
+                    #breakpoint()
                     diff = df1.loc[j, "Shift"] - df2.loc[j, "Shift"]
                     df1.loc[j, "Shift"] = diff
                 #print(df1.head(10))
