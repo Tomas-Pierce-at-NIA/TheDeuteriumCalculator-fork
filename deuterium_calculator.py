@@ -918,6 +918,9 @@ def read_sequence(string):
 
 ######################################################################
 class Peptide:
+    
+    mmc = ModifiedMassComputer()
+    
     def __init__(self, sequence, mz, charge, retention_time):
         self._windows = []
         self._sequence = read_sequence(sequence)
@@ -936,14 +939,13 @@ class Peptide:
             self._deuterium_dictionary[det] = {"m/z": 0, "intensity": 0, "ppm": 0}
         #self._average_mass = 0
         #self.set_average_mass()
-        mmc = ModifiedMassComputer()
-        self._average_mass = mmc.compute_mass_avg(sequence)
+        self._average_mass = self.mmc.compute_mass_avg(sequence)
         self._protein = parse_protein(CON.PROTEIN_SEQUENCE_FILE)
         self._start, self._end = find_start_end(self._sequence, self._protein)
         self._fit = 0  # Gaussian fit
         
         #self.__monoisotopic_mass = mass.fast_mass(sequence)
-        self.__monoisotopic_mass = mmc.compute_mass_monoisotopic(sequence)
+        self.__monoisotopic_mass = self.mmc.compute_mass_monoisotopic(sequence)
     
     @property
     def monoisotopic_mass(self):
