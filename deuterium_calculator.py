@@ -4,6 +4,8 @@ os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
 
 import sys
 
+from sortedcontainers import SortedList
+
 import numpy as np
 import pandas as pd
 import csv
@@ -532,8 +534,6 @@ class ExperimentalRun:
     def get_peptides(self):
         return self.peptides
 
-
-
     def get_tuple_dictionary(self):
         return self.windows
 
@@ -638,12 +638,14 @@ class ExperimentalRun:
         charge = pep.get_charge()
         pep_mass_over_charge = pep.get_mass_over_charge()
         pep_mass = pep_mass_over_charge * charge
-        tuple_list = []
+        #tuple_list = []
+        tuple_list = SortedList(key=lambda x : x[0])
         # collects windows that match the rt of the sequence to user rt tolerance.
         for rt, tup_list in self.get_tuple_dictionary().items():
             if start <= rt[0] <= end or start <= rt[1] <= end:
-                tuple_list.extend(tup_list)
-        tuple_list.sort(key=lambda x: x[0])
+                tuple_list.update(tup_list)
+                #tuple_list.extend(tup_list)
+        # tuple_list.sort(key=lambda x: x[0])
         # searches for a match for each deuteration
         for det in range(pep.get_max_deuterium() + 1):
             ppm_error, mz, intensity = compare(pep_mass + det * CON.DEUTERIUM_MASS_DIFFERENCE,
@@ -1026,7 +1028,7 @@ def show_menu():
 
 
 
-@profile_func("dcalc_prof.profile")
+#@profile_func("dcalc_prof.profile")
 def main():
     
     ###################### Generate non_D mass file
