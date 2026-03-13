@@ -8,12 +8,10 @@ import numpy as np
 import pandas as pd
 import csv
 from scipy.optimize import curve_fit
-from scipy import stats
 import PARAMETERS as CON
 from pyteomics import mzml
 from datetime import datetime
 from os import path
-from matplotlib import pyplot as plt
 import warnings
 import pathlib
 
@@ -81,15 +79,7 @@ def sequence_to_max_deuterium(sequence: str):
     max_deuterium -= proline_count
     return int(max_deuterium * CON.DEUTERIUM_RECOVERY_RATE * CON.DEUTERIUM_FRACTION) + 1
 
-# returns the maximum possible deuterium for a given sequence
-# This is represented as the # of amino acids - 2 - the number of proline molecules  * D2O Fraction.
-def max_deuterium_mlf(sequence: str):
-    max_deuterium = len(sequence) - 2
-    low_seq = sequence.lower() # make casing consistent
-    p_count = low_seq.count('p') # count prolines
-    max_deuterium -= p_count # reduce maximum deuterium by number prolines
-    max_d_mlf = max_deuterium * CON.DEUTERIUM_FRACTION
-    return max_d_mlf
+
 
 
 def check_output_extension(file: str):
@@ -100,8 +90,8 @@ def check_output_extension(file: str):
 
 # Checks that user PARAMETER configuration is (relatively) correct
 def check_parameters():
-    output_files = [CON.RECOMMENDATION_TABLE_1, CON.RECOMMENDATION_TABLE_2, CON.SUMMARY_TABLE, CON.WOODS_PLOT_NAME,
-                    CON.FULL_HDX_OUTPUT, CON.WOODS_TABLE_NAME]
+    output_files = [CON.RECOMMENDATION_TABLE_1, CON.RECOMMENDATION_TABLE_2, CON.SUMMARY_TABLE,
+                    CON.FULL_HDX_OUTPUT]
     for file in output_files:
         check_output_extension(file)
         check_directory(file)
@@ -128,10 +118,7 @@ def check_parameters():
         raise ValueError("RETENTION_TOLERANCE must be a number over 10, greater than 30 recommended.")
     if CON.RETENTION_TOLERANCE < 30:
         warnings.warn("A retention tolerance of greater than 30s is recommended")
-    if not 0 < CON.WOODS_PLOT_CONFIDENCE_LOW < 1:
-        raise ValueError("Woods' Plot Confidence LOW must be between 0 and 1")
-    if not 0 < CON.WOODS_PLOT_CONFIDENCE_HIGH < 1:
-        raise ValueError("Woods' Plot Confidence HIGH must be between 0 and 1")
+
 
 
 def check_extension(string, extension):
@@ -167,7 +154,6 @@ def parse_protein(file: str):
         text = f.read()
         sequence = "".join([character for character in text if character.isalpha()])
     return sequence
-
 
 
 # Takes in a list of tuples and combines each where first elements is within a ppm tolerance
@@ -257,17 +243,7 @@ def compare(target, charge, array, full_array):
         return 0, 0, 0
 
 
-# Converts scan number to retention time using the mzml file
-def set_retention_times(file: str):
-    retention_scan_dictionary = {}
-    with mzml.read(file) as f:
-        for scan in f:
-            if scan["ms level"] == 2:
-                scan_time = float(scan["scanList"]["scan"][0]["scan start time"])
-                scan_time = (scan_time - CON.RETENTION_SHIFT_INTERCEPT) / CON.RETENTION_SHIFT_SLOPE
-                scan_time *= CON.MINUTES_TO_SECONDS
-                retention_scan_dictionary[scan["index"] + 1] = scan_time
-    return retention_scan_dictionary
+
 
 
 
@@ -503,142 +479,15 @@ class FullExperiment:
                 df = self.generate_rows(df, time, False)
         df.to_csv(CON.RECOMMENDATION_TABLE_2 + ".csv", index=False)
 
-    def generate_summary_table(self):
-        labels = ["HDX reaction details",
-                  "HDX time course",
-                  "HDX control samples",
-                  "Back-exchange (mean / IQR)",
-                  "# of Peptides",
-                  "Sequence coverage",
-                  "Average peptide length / Redundancy",
-                  "Replicates (biological or technical",
-                  "Repeatability",
-                  "Significant differences in HDX (delta HDX > X D)"]
-        time_strings = []
-        for time in self._time_points:
-            time_strings.append(str(time))
-        info = ["",
-                ",".join(time_strings),
-                "",
-                "",
-                len(self._peptides),
-                "",
-                "",
-                "{}: {} {}: {}".format(CON.CONDITION1, self.get_num_replications(True),
-                                       CON.CONDITION2, self.get_num_replications(False)),
-                "",
-                ""]
-        data = {"Data Set": labels, CON.CONDITION1: info, CON.CONDITION2: info}
-        df = pd.DataFrame(data=data)
-        df.to_csv(CON.SUMMARY_TABLE + ".csv", index=False)
-
+    
     def generate_output(self):
         self.generate_recommendation_table_1()
         self.generate_recommendation_table_2()
         if self._is_differential:
-            self.generate_differential_woods_plot(CON.WOODS_PLOT_TITLE)
-            self.generate_differential_woods_plot(CON.WOODS_PLOT_TITLE, False)
             self.generate_summary_table()
 
-    # confidence is between 0 and 1, df is
-    def calculate_confidence_limit(self, time, fractional, confidence):
-        n = self._num_complex_replications + self._num_free_replications
-        df = n - 2
-        if fractional:
-            deviations = self.fractional_deviations_by_time[time]
-        else:
-            deviations = self.deviations_by_time[time]
-        if not deviations:
-            raise ValueError("add deviations before calculating confidence limit.")
-        differences = self.difference_deviations[time]
-        stdev = np.std(differences, ddof=1)
-        alpha = 1 - confidence
-        critical_value = stats.t.ppf(1 - (alpha / 2), df)
-        standard_error = stdev / n ** 0.5
-        return standard_error * critical_value
-
-    # Saves a plot of name "file"_"time"s.png with a given title. can be fractional or absolute
-    # Also generates a table of the values used in the plot
-    def generate_differential_woods_plot(self, title: str, is_fractional=True):
-        # Formatting
-        plt.figure(figsize=(CON.WOODS_PLOT_WIDTH, CON.WOODS_PLOT_HEIGHT))
-        plt.title(title)
-        plt.xlabel("Sequence")
-        plt.tight_layout()
-        plt.xlim(0, len(self.protein))
-        gray = '#D3D3D3'
-        if is_fractional:
-            plt.ylabel("Relative Fractional Uptake")
-        else:
-            plt.ylabel("Relative Uptake (Da)")
-        # Generates a plot for each time point
-        for time in self._time_points:
-            df = pd.read_csv(CON.RECOMMENDATION_TABLE_1 + ".csv", header=[0, 1])
-            time_col = str(time) + " s"
-            # Plots each peptide
-            for _, row in df.iterrows():
-                free_deviation = row["Uptake error (SD) - " + CON.CONDITION1 + " (D)"][time_col]
-                complex_deviation = row["Uptake error (SD) - " + CON.CONDITION2 + " (D)"][time_col]
-                difference = (free_deviation ** 2 + complex_deviation ** 2) ** 0.5
-                length = max_deuterium_mlf(row["Sequence"]["Sequence"])
-                if is_fractional:
-                    difference /= length
-                self.difference_deviations[time].append(difference)
-            high_confidence = self.calculate_confidence_limit(time, is_fractional, CON.WOODS_PLOT_CONFIDENCE_HIGH)
-            low_confidence = self.calculate_confidence_limit(time, is_fractional, CON.WOODS_PLOT_CONFIDENCE_LOW)
-            output_table = {
-                'Sequence': [],
-                'Start': [],
-                'End': [],
-                'Relative Uptake': [],
-                'Relative Fractional Uptake': [],
-                'Significant': []
-            }
-            # Adds each sequence to table
-            for _, row in df.iterrows():
-                sequence = row['Sequence']['Sequence']
-                start, end = row["Start"]["Start"], row["End"]["End"]
-                difference = (row["Uptake " + CON.CONDITION2 + " (D)"][time_col] -
-                              row["Uptake " + CON.CONDITION1 + " (D)"][time_col])
-                absolute_difference = difference
-                if is_fractional:
-                    difference /= max_deuterium_mlf(sequence)
-                if abs(difference) > high_confidence:
-                    line_color = 'r'
-                else:
-                    line_color = gray
-                x = start, end
-                y = (difference, difference)
-                plt.plot(x, y, line_color)
-                output_table['Sequence'].append(sequence)
-                output_table['Start'].append(start)
-                output_table['End'].append(end)
-                output_table['Relative Uptake'].append(absolute_difference)
-                output_table['Relative Fractional Uptake'].append(difference)
-                if abs(difference) > high_confidence:
-                    output_table['Significant'].append("Yes")
-                else:
-                    output_table['Significant'].append("No")
-            # Plots the significance lines
-            plt.plot((0, len(self.protein)), (0, 0), 'k:')
-            plt.plot((0, len(self.protein)), (high_confidence, high_confidence), 'k')
-            plt.plot((0, len(self.protein)), (-high_confidence, -high_confidence), 'k')
-            plt.plot((0, len(self.protein)), (low_confidence, low_confidence), '--', color='k')
-            plt.plot((0, len(self.protein)), (-low_confidence, -low_confidence),  '--', color='k')
-            # Generates Output
-            data_frame = pd.DataFrame(data=output_table)
-            table_file_name = CON.WOODS_TABLE_NAME
-            if is_fractional:
-                table_file_name += "_fractional"
-            data_frame.to_csv(table_file_name + ".csv", index=False)
-            plot_file_name = CON.WOODS_PLOT_NAME + "_" + str(time) + "s"
-            if is_fractional:
-                plot_file_name += "_fractional"
-            plot_file_name += ".png"
-            plt.savefig(plot_file_name)
 
 
-##########################################################################
 class ReadRun:
 
     def __init__(self, time, complexity, replication):
@@ -853,30 +702,12 @@ def generate_output_name(time, is_complex, replication):
     return file
 
 
-def read_sequence(string):
-    has_period = ('.' in string)
-    if not has_period:
-        return string
-    found_period = False
-    return_string = ""
-    for letter in string:
-        if letter == '.' and found_period:
-            return return_string
-        elif letter == '.':
-            found_period = True
-        elif found_period:
-            return_string += letter
-    raise ValueError("Sequence formatted incorrectly")
-
-
-######################################################################
 class Peptide:
     
     mmc = ModifiedMassComputer()
     
     def __init__(self, sequence, mz, charge, retention_time):
-        self._windows = []
-        self._sequence = read_sequence(sequence)
+        self._sequence = sequence
         self._charge = charge
         self._mass_over_charge = mz
         self._rt_start = 0
@@ -890,49 +721,30 @@ class Peptide:
         self.max_deuterium = sequence_to_max_deuterium(self._sequence)
         for det in range(self.max_deuterium + 1):
             self._deuterium_dictionary[det] = {"m/z": 0, "intensity": 0, "ppm": 0}
-        #self._average_mass = 0
-        #self.set_average_mass()
+
         self._average_mass = self.mmc.compute_mass_avg(sequence)
         self._protein = parse_protein(CON.PROTEIN_SEQUENCE_FILE)
         self._start, self._end = find_start_end(self._sequence, self._protein)
         self._fit = 0  # Gaussian fit
         
-        #self.__monoisotopic_mass = mass.fast_mass(sequence)
+        
         self.__monoisotopic_mass = self.mmc.compute_mass_monoisotopic(sequence)
     
     @property
     def monoisotopic_mass(self):
         return self.__monoisotopic_mass
     
-    @monoisotopic_mass.setter
-    def monoisotopic_mass(self, monoisotopic_mass):
-        self.__monoisotopic_mass = monoisotopic_mass
-
-    def __str__(self):
-        self.__repr__()
-        return ""
-
-    def __repr__(self):
-        print("Sequence:", self._sequence)
-        print("Average Mass:", self._average_mass)
-        print("Max Deuterium:", self.get_max_deuterium())
-        print("Fit:", self._fit)
-        print("Mass Shift:", self._mass_shift)
-        print("Monoisotopic mass:", self.monoisotopic_mass)
 
     # Getters
     
     def get_retention_time(self):
         return self._retention_time
     
-    # def get_fit(self):
-    #     return self._fit
+
 
     def get_mass_shift(self):
         return self._mass_shift
 
-    # def get_weighted_mass(self):
-    #     return self._weighted_mass_to_charge
 
     def get_average_mass(self):
         return self._average_mass
@@ -1039,12 +851,6 @@ class Peptide:
             self._weighted_mass_to_charge = -1
             self._mass_shift = -1
 
-    # calculates the average mass from the sequence (Uses values in the PARAMETERS.py file)
-    def set_average_mass(self):
-        # this entire function is potentially removable
-        avg_mass = self.mmc.compute_mass_avg(self._sequence)
-        self._average_mass = avg_mass  # this is important
-        return self._average_mass # this is dispensable
 
         
 
@@ -1211,16 +1017,16 @@ def recalculate_shift(Peptide_lib):
 
 def show_menu():
     print("Please enter the number of one of the following selections:")
-    print("(0) Optional: re-calculate non_deuterated peptides after manual validation)")
+   # print("(0) Optional: re-calculate non_deuterated peptides after manual validation)")
     print("(1) Detailed output from mzML (Only used once per experiment)")
-    print("(2) re-calculation after manual validation ")
+    #print("(2) re-calculation after manual validation ")
     print("(3) Final summary and figures from detailed outputs")
-    print("(4) Convert format for DECA software")
+    # print("(4) Convert format for DECA software")
     print("(5) Quit")
 
 
-##############################################################################
-#@profile_func("dcalc_prof.profile")
+
+@profile_func("dcalc_prof.profile")
 def main():
     
     ###################### Generate non_D mass file
@@ -1288,18 +1094,12 @@ def main():
                 #print(df1.head(10))
                 df1.to_csv(Files[i], index=False)
             print("Total Time Elapsed:", datetime.now() - start_time)
-        if menu_input == '2':
-            print("Not Implemented")
-            sys.exit(0)
         if menu_input == '3':
             print("Generating Output files")
             experiment = FullExperiment(time_points, is_differential, num_free_replications, num_complex_replications)
             experiment.read_runs()
             experiment.generate_output()
             print("\nSuccess!\n")
-        if menu_input == '4':
-            print("Not implemented")
-            sys.exit(0)
         if menu_input == '5':
             print("quitting")
             sys.exit(0)
