@@ -2,7 +2,6 @@
 import os
 os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
 
-import re
 import numpy as np
 import pandas as pd
 import csv
@@ -10,14 +9,14 @@ from scipy.optimize import curve_fit
 from scipy import stats
 import PARAMETERS as CON
 from pyteomics import mzml
-from pyteomics import mass
 from datetime import datetime
 from os import path
 from matplotlib import pyplot as plt
 import warnings
 import pathlib
 
-from unimod_lookup import UniMod
+import cProfile
+
 from mmc import ModifiedMassComputer
 
 warnings.filterwarnings("ignore", message="Covariance of the parameters could not be estimated")
@@ -48,7 +47,7 @@ def calculate_r_squared(x_data, y_data, *p):
     return r_squared
 
 
-# fits a Guassian curve to ordered list parameter, returns r^2
+# fits a Gaussian curve to ordered list parameter, returns r^2
 def fit_gaussian(y_data):
     x_data = list(range(len(y_data)))
     consecutive_non_zeroes = 0
@@ -270,16 +269,16 @@ def compare(target, charge, array, full_array):
 
 
 # Converts scan number to retention time using the mzml file
-def set_retention_times(file: str):
-    retention_scan_dictionary = {}
-    with mzml.read(file) as f:
-        for scan in f:
-            if scan["ms level"] == 2:
-                scan_time = float(scan["scanList"]["scan"][0]["scan start time"])
-                scan_time = (scan_time - CON.RETENTION_SHIFT_INTERCEPT) / CON.RETENTION_SHIFT_SLOPE
-                scan_time *= CON.MINUTES_TO_SECONDS
-                retention_scan_dictionary[scan["index"] + 1] = scan_time
-    return retention_scan_dictionary
+# def set_retention_times(file: str):
+#     retention_scan_dictionary = {}
+#     with mzml.read(file) as f:
+#         for scan in f:
+#             if scan["ms level"] == 2:
+#                 scan_time = float(scan["scanList"]["scan"][0]["scan start time"])
+#                 scan_time = (scan_time - CON.RETENTION_SHIFT_INTERCEPT) / CON.RETENTION_SHIFT_SLOPE
+#                 scan_time *= CON.MINUTES_TO_SECONDS
+#                 retention_scan_dictionary[scan["index"] + 1] = scan_time
+#     return retention_scan_dictionary
 
 
 #################################################################################################
@@ -721,7 +720,7 @@ class ExperimentalRun:
 
     # converts peptide scan number to retention times
     def set_pep_retention_times(self, file: str):
-        #conversion_dictionary = set_retention_times(file)
+        
         for pep in self.peptides:
             #scan = pep.get_scan()
             rt = pep.get_retention_time()
@@ -733,6 +732,8 @@ class ExperimentalRun:
         # tolerate either csv or parquet files
         if file.endswith('.csv'):
             table = pd.read_csv(file)
+        elif file.endswith('.tsv'):
+            table = pd.read_csv(file, sep='\t')
         elif file.endswith('.parquet'):
             table = pd.read_parquet(file)
         for i in range(len(table)):
@@ -1092,18 +1093,8 @@ class Peptide:
     # calculates the average mass from the sequence (Uses values in the PARAMETERS.py file)
     def set_average_mass(self):
         # this entire function is potentially removable
-        # mass = 0
-        # for amino in self._sequence:
-            # if amino in CON.PEPTIDE_MASS_DICTIONARY:
-                # mass += CON.PEPTIDE_MASS_DICTIONARY[amino]
-            # else:
-                
-                # breakpoint()
-        # mass += CON.MASS_OF_WATER
-        # self._average_mass = mass
-        mass_computer = ModifiedMassComputer()
-        avg_mass = mass_computer.compute_mass_avg(self._sequence)
-        self._average_mass = avg_mass # this is important
+        avg_mass = self.mmc.compute_mass_avg(self._sequence)
+        self._average_mass = avg_mass  # this is important
         return self._average_mass # this is dispensable
 
         
@@ -1185,11 +1176,7 @@ def get_file_name(time_points, is_differential, num_free_replications, num_compl
 def set_average_mass(sequence):
     computer = ModifiedMassComputer()
     return computer.compute_mass_avg(sequence)
-    # mass = 0
-    # for amino in sequence:
-        # mass += CON.PEPTIDE_MASS_DICTIONARY[amino]
-    # mass += CON.MASS_OF_WATER
-    # return mass
+
 
 def weighted_average_mass_mlf(mz, Intensity, charge, average_mass):
     mz = [float(i) for i in mz]
@@ -1357,6 +1344,7 @@ def main():
     experiment = FullExperiment(time_points, is_differential, num_free_replications, num_complex_replications)
     experiment.add_file_names_non_D()
     for time in time_points:
+        breakpoint()
         experiment.add_runs(time)
     Non_D = (CON.FULL_HDX_OUTPUT + "_-10s_Free_1.csv")
     df = pd.read_csv(Non_D)
@@ -1380,6 +1368,7 @@ def main():
     else:
         num_complex_replications = 0
     print()
+    assert False
     menu_input = None
     while menu_input != 'q':
         show_menu()
@@ -1445,4 +1434,18 @@ def main():
 
 
 if __name__ == '__main__':
+    
     main()
+    assert False
+    
+    profile = cProfile.Profile()
+    profile.enable()
+    try:
+        pass
+        #main()
+    except AssertionError:
+        profile.disable()
+        profile.dump_stats("dcalc_upto.profile")
+    finally:
+        profile.disable()
+    profile.dump_stats("dcalc_profile.profile")
