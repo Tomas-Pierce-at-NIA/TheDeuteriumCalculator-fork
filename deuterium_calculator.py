@@ -283,7 +283,7 @@ def set_retention_times(file: str):
     return retention_scan_dictionary
 
 
-#################################################################################################
+
 class FullExperiment:
 
     def __init__(self, time_points: list, differential: bool, free_replications: int, complex_replications: int):
@@ -344,7 +344,7 @@ class FullExperiment:
                 is_complex = True
                 for replication in range(self._num_complex_replications):
                     self.add_file(time, is_complex, replication)
-######################################################
+
     def add_file_names_non_D(self):
         for time in self._time_points:
             is_complex = False
@@ -354,17 +354,14 @@ class FullExperiment:
                 is_complex = True
                 for replication in range(self._num_complex_replications):
                     self.add_file_non_D(time, is_complex, replication)
-    def get_file(self, index: int):
-        return self._file_names[index]
+
 
     def add_deviation(self, time, deviation, pep):
         if pep.get_mass_shift() > 0:
             self.deviations_by_time[time].append(deviation)
             self.fractional_deviations_by_time[time].append(deviation / pep.get_max_deuterium())
 
-    def add_average(self, time, average):
-        self.averages[time].append(average)
-######################
+
     def add_file_non_D(self, time, is_complex: bool, replication):
         
         print("Enter path to non_D for   Time:", time, "  Replication:",
@@ -699,14 +696,7 @@ class ExperimentalRun:
     def get_peptides(self):
         return self.peptides
 
-    def get_run(self):
-        return self._replication
 
-    def get_complexity(self):
-        return self._complexity
-
-    def get_time(self):
-        return self._time
 
     def get_tuple_dictionary(self):
         return self.windows
@@ -784,10 +774,7 @@ class ExperimentalRun:
         starts = range(0, int(window_count * SLIDE_AMOUNT), int(SLIDE_AMOUNT))
         ends = range(CON.SLIDING_WINDOW_SIZE, int(window_count * SLIDE_AMOUNT + CON.SLIDING_WINDOW_SIZE), int(SLIDE_AMOUNT))
         windows = zip(starts, ends)
-        # for i in range(window_count):
-            # windows.append((start, stop))
-            # start += SLIDE_AMOUNT
-            # stop += SLIDE_AMOUNT
+
         window_dictionary = {}
         for window in windows:
             window_dictionary[window] = []
@@ -808,27 +795,6 @@ class ExperimentalRun:
     def add_peptide(self, sequence, mz, charge, rt):
         self.peptides.append(Peptide(sequence, mz, charge, rt))
 
-    def iterlists(self, index):
-        yield from self.all_peaks[index]["tuple list"]
-
-    # outputs a .csv that has the data for a TIC scatter plot
-    def generate_total_ion_chromatogram(self):
-        mass_ratio = float(input("Enter desired m/z ratio: "))
-        tolerance = float(input("Enter m/z tolerance: "))
-        start_time = datetime.now()
-        tic_list = []
-        for i in self.all_peaks:
-            retention_time = i["retention time"]
-            for mz, intensity in i["tuple list"]:
-                if abs(mass_ratio - mz) <= tolerance:
-                    tic_list.append((retention_time, intensity))
-        elapsed_time = datetime.now() - start_time
-        print("\nTime to generate TIC: {}\n".format(elapsed_time))
-        user_input = input("What would you like to name this file? ")
-        with open(user_input + ".csv", 'w', newline='') as f:
-            csv_writer = csv.writer(f)
-            for i in tic_list:
-                csv_writer.writerow(i)
 
     def match_peptides(self, pep):
         start, end = pep.get_rt_start_end()
@@ -972,14 +938,14 @@ class Peptide:
     def get_retention_time(self):
         return self._retention_time
     
-    def get_fit(self):
-        return self._fit
+    # def get_fit(self):
+    #     return self._fit
 
     def get_mass_shift(self):
         return self._mass_shift
 
-    def get_weighted_mass(self):
-        return self._weighted_mass_to_charge
+    # def get_weighted_mass(self):
+    #     return self._weighted_mass_to_charge
 
     def get_average_mass(self):
         return self._average_mass
@@ -1057,8 +1023,6 @@ class Peptide:
             intensities.append(self._deuterium_dictionary[key]["intensity"])
         self._fit = fit_gaussian(intensities)
 
-    def set_windows(self, window):
-        self._windows.append(window)
 
     def set_deuterium(self, det, mz, intensity, ppm_error):
         self._deuterium_dictionary[det]["m/z"] = mz
@@ -1255,67 +1219,7 @@ def recalculate_shift(Peptide_lib):
     Peptide_lib["Gaussian Fit"] = list_Gussian_fit_new
     return Peptide_lib
 
-######################################################################################################################################
-def get_ori_title(file, time_points):
-    col_title = ["Start", "End", "Sequence", "MHP", "RT"]
-    l1 = []
-    l2 = []
-    l3 = []
-    l4 = []
-    for i in range(len(time_points)):
-        l1.append("Uptake Free (D)")
-        l2.append("Uptake Complex (D)")
-        l3.append("Uptake error (SD) - Free (D)")
-        l4.append("Uptake error (SD) - Complex (D)")
-    col_title_new = col_title + l1 + l2 + l3 +l4
-    file.columns = col_title_new
-    return file
 
-# generate free dataframe and complex dataframe and delete irrelevant columns and then combine and sort them
-def get_combined_table(df1, df2):
-    df1 = df1.drop(['Uptake Complex (D)', 'Uptake error (SD) - Complex (D)'], axis=1)
-    df1.insert(0, "State", "Free")
-    df2 = df2.drop(['Uptake Free (D)', 'Uptake error (SD) - Free (D)'], axis=1)
-    df2.insert(0, "State", "Complex")
-    df1.columns = df2.columns
-    df_new = pd.concat([df1, df2], axis=0, ignore_index=True)
-    df_new.sort_values(by=['End', 'Start'], inplace=True, ignore_index=True)
-    a = len(df_new.columns)
-    col_title_1 = ["State", "Start", "End", "Sequence", "MHP", "RT"]
-    b = df_new["Start"].count()
-    for i in range(a):
-        if i > 5:
-            t = str(df_new.iloc[b - 1, i]).replace(" ", "")
-            head = str(df_new.columns[i]).replace(" Complex (D)", "")
-            col_title_1.append(head + "_" + t)
-    df_new.columns = col_title_1
-    df_new_drop_n = df_new.iloc[:-2]
-    return df_new_drop_n
-
-def get_value(file, time_points, name):
-    b = file["Start"].count()
-    d = len(time_points)
-    for i in range(d):
-        Uptake_list = []
-        Uptake_SD_list = []
-        for j in range(b):
-               Uptake_list.append(float(file.iloc[j, 6+i]))
-               Uptake_SD_list.append(float(file.iloc[j, 6+d+i]))
-               head_0 = ("Uptake_SD" +"_" + str(time_points[i]) + "s")
-               file.rename(columns ={file.columns[6+d+i]: head_0}, inplace = True)
-        center_ori = set_average_mass(file.loc[j, "Sequence"])
-        center_uptake = [x+center_ori for x in Uptake_list]
-        center_SD = Uptake_SD_list
-        head_1 = ("Center" +"_" + str(time_points[i]) + "s")
-        head_2 = ("Center_SD" + "_" + str(time_points[i]) + "s")
-        file[head_1] = center_uptake
-        file[head_2] = center_SD
-    file.loc[:,"RT SD"] = 0
-    file.loc[:,"Modification"] = ""
-    file.loc[:,"Fragment"] = ""
-    file.loc[:,"MaxUptake"] = ""
-    file.loc[:,"Protein"] = name
-    return file
 
 
 def show_menu():
@@ -1329,7 +1233,7 @@ def show_menu():
 
 
 ##############################################################################
-@profile_func("dcalc_prof.profile")
+#@profile_func("dcalc_prof.profile")
 def main():
     
     ###################### Generate non_D mass file
@@ -1366,7 +1270,6 @@ def main():
     else:
         num_complex_replications = 0
     print()
-    assert False
     menu_input = None
     while menu_input != 'q':
         show_menu()
@@ -1375,11 +1278,8 @@ def main():
         except IndexError:
             pass
         if menu_input == "0":
-            print("\nProcessing\n")
-            df = pd.read_csv(Non_D)
-            recalculate_shift(df)
-            df.to_csv(CON.FULL_HDX_OUTPUT + "_non_D.csv", index=False)
-            print("\nSuccess!\n")
+            print("Not Implemented")
+            sys.exit(0)
         if menu_input == '1':
             
             start_time = datetime.now()
@@ -1402,12 +1302,8 @@ def main():
                 df1.to_csv(Files[i], index=False)
             print("Total Time Elapsed:", datetime.now() - start_time)
         if menu_input == '2':
-            Files = get_file_name(time_points, is_differential, num_free_replications, num_complex_replications)
-            for i in range(len(Files)):
-                print("processing dataset:", str(Files[i]))
-                df = pd.read_csv(Files[i])
-                recalculate_shift(df)
-                df.to_csv(Files[i], index=False)
+            print("Not Implemented")
+            sys.exit(0)
         if menu_input == '3':
             print("Generating Output files")
             experiment = FullExperiment(time_points, is_differential, num_free_replications, num_complex_replications)
@@ -1415,20 +1311,11 @@ def main():
             experiment.generate_output()
             print("\nSuccess!\n")
         if menu_input == '4':
-            name = input("please input protein name :")
-            print("Converting")
-            File = (CON.RECOMMENDATION_TABLE_1 + ".csv")
-            df1_1 = pd.read_csv(File)  # for free
-            df2_1 = pd.read_csv(File)  # for complex
-            df1 = get_ori_title(df1_1, time_points)
-            df2 = get_ori_title(df2_1, time_points)
-            new_table = get_combined_table(df1, df2)
-            df = get_value(new_table, time_points, name)
-            File2 = (CON.RECOMMENDATION_TABLE_1 + "_" +"DECA Format " + ".csv")
-            df.to_csv(File2, index=False)
-            print("\nSuccess!\n")
+            print("Not implemented")
+            sys.exit(0)
         if menu_input == '5':
-            quit()
+            print("quitting")
+            sys.exit(0)
 
 
 if __name__ == '__main__':
