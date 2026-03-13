@@ -2,6 +2,8 @@
 import os
 os.environ['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = '1'
 
+import sys
+
 import numpy as np
 import pandas as pd
 import csv
@@ -15,9 +17,9 @@ from matplotlib import pyplot as plt
 import warnings
 import pathlib
 
-import cProfile
-
 from mmc import ModifiedMassComputer
+
+from profiling_wrap import profile_func
 
 warnings.filterwarnings("ignore", message="Covariance of the parameters could not be estimated")
 SLIDE_AMOUNT = CON.SLIDING_WINDOW_SIZE / CON.SLIDE_FRACTION
@@ -364,9 +366,7 @@ class FullExperiment:
         self.averages[time].append(average)
 ######################
     def add_file_non_D(self, time, is_complex: bool, replication):
-        complexity = CON.CONDITION1
-        if is_complex:
-            complexity = CON.CONDITION2
+        
         print("Enter path to non_D for   Time:", time, "  Replication:",
               replication + 1, )
         file = ""
@@ -780,8 +780,6 @@ class ExperimentalRun:
         window_count = int(int((retention_time // CON.SLIDING_WINDOW_SIZE) + 1) *
                            (CON.SLIDING_WINDOW_SIZE / SLIDE_AMOUNT)) - 1
         start_time = datetime.now()
-        start = 0
-        stop = CON.SLIDING_WINDOW_SIZE
         
         starts = range(0, int(window_count * SLIDE_AMOUNT), int(SLIDE_AMOUNT))
         ends = range(CON.SLIDING_WINDOW_SIZE, int(window_count * SLIDE_AMOUNT + CON.SLIDING_WINDOW_SIZE), int(SLIDE_AMOUNT))
@@ -1296,7 +1294,6 @@ def get_combined_table(df1, df2):
 
 def get_value(file, time_points, name):
     b = file["Start"].count()
-    c = len(file.columns)
     d = len(time_points)
     for i in range(d):
         Uptake_list = []
@@ -1332,6 +1329,7 @@ def show_menu():
 
 
 ##############################################################################
+@profile_func("dcalc_prof.profile")
 def main():
     
     ###################### Generate non_D mass file
@@ -1436,16 +1434,4 @@ def main():
 if __name__ == '__main__':
     
     main()
-    assert False
     
-    profile = cProfile.Profile()
-    profile.enable()
-    try:
-        pass
-        #main()
-    except AssertionError:
-        profile.disable()
-        profile.dump_stats("dcalc_upto.profile")
-    finally:
-        profile.disable()
-    profile.dump_stats("dcalc_profile.profile")
