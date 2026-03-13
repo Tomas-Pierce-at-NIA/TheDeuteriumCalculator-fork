@@ -269,16 +269,16 @@ def compare(target, charge, array, full_array):
 
 
 # Converts scan number to retention time using the mzml file
-# def set_retention_times(file: str):
-#     retention_scan_dictionary = {}
-#     with mzml.read(file) as f:
-#         for scan in f:
-#             if scan["ms level"] == 2:
-#                 scan_time = float(scan["scanList"]["scan"][0]["scan start time"])
-#                 scan_time = (scan_time - CON.RETENTION_SHIFT_INTERCEPT) / CON.RETENTION_SHIFT_SLOPE
-#                 scan_time *= CON.MINUTES_TO_SECONDS
-#                 retention_scan_dictionary[scan["index"] + 1] = scan_time
-#     return retention_scan_dictionary
+def set_retention_times(file: str):
+    retention_scan_dictionary = {}
+    with mzml.read(file) as f:
+        for scan in f:
+            if scan["ms level"] == 2:
+                scan_time = float(scan["scanList"]["scan"][0]["scan start time"])
+                scan_time = (scan_time - CON.RETENTION_SHIFT_INTERCEPT) / CON.RETENTION_SHIFT_SLOPE
+                scan_time *= CON.MINUTES_TO_SECONDS
+                retention_scan_dictionary[scan["index"] + 1] = scan_time
+    return retention_scan_dictionary
 
 
 #################################################################################################
@@ -1072,7 +1072,7 @@ class Peptide:
         self._rt_end = end
 
     def set_weighted_mass(self):
-        #breakpoint()
+        
         total_intensity = 0
         mass = 0
         for det in self._deuterium_dictionary.keys():
@@ -1333,7 +1333,7 @@ def show_menu():
 
 ##############################################################################
 def main():
-    #breakpoint()
+    
     ###################### Generate non_D mass file
     time_points = [-10]
     is_differential = False
@@ -1344,7 +1344,7 @@ def main():
     experiment = FullExperiment(time_points, is_differential, num_free_replications, num_complex_replications)
     experiment.add_file_names_non_D()
     for time in time_points:
-        breakpoint()
+        
         experiment.add_runs(time)
     Non_D = (CON.FULL_HDX_OUTPUT + "_-10s_Free_1.csv")
     df = pd.read_csv(Non_D)
@@ -1383,7 +1383,7 @@ def main():
             df.to_csv(CON.FULL_HDX_OUTPUT + "_non_D.csv", index=False)
             print("\nSuccess!\n")
         if menu_input == '1':
-            #breakpoint()
+            
             start_time = datetime.now()
             # Perform peak matching and generate output
             experiment = FullExperiment(time_points, is_differential, num_free_replications, num_complex_replications)
@@ -1397,7 +1397,7 @@ def main():
                 df2=pd.read_csv(CON.FULL_HDX_OUTPUT + "_non_D.csv")
                 Peptide_count = df1["Sequence"].count()
                 for j in range(Peptide_count):
-                    #breakpoint()
+                    
                     diff = df1.loc[j, "Shift"] - df2.loc[j, "Shift"]
                     df1.loc[j, "Shift"] = diff
                 #print(df1.head(10))
