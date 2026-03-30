@@ -109,8 +109,8 @@ def check_parameters():
         raise NameError("IDENTIFICATION_MZML_FILE must be a .mzml, fix and restart the program.")
     #if not check_extension(CON.IDENTIFICATION_CSV_FILE, "csv"):
     #    raise NameError("IDENTIFICATION_CSV_FILE must be a .csv, fix and restart the program.")
-    if not check_extension(CON.IDENTIFICATION_PARQUET_FILE, "parquet"):
-        raise NameError("IDENTIFICATION_PARQUET_FILE must be a .parquet, fix and restart the program")
+    #if not check_extension(CON.IDENTIFICATION_PARQUET_FILE, "parquet"):
+    #    raise NameError("IDENTIFICATION_PARQUET_FILE must be a .parquet, fix and restart the program")
     if not check_extension(CON.PROTEIN_SEQUENCE_FILE, "txt"):
         raise NameError("PROTEIN_SEQUENCE_FILE must be a .txt, fix and restart the program.")
     input_files = [CON.IDENTIFICATION_MZML_FILE, CON.IDENTIFICATION_PARQUET_FILE, CON.PROTEIN_SEQUENCE_FILE]
@@ -734,15 +734,23 @@ class ExperimentalRun:
             table = pd.read_csv(file)
         elif file.endswith('.tsv'):
             table = pd.read_csv(file, sep='\t')
+            for i in range(len(table)):
+                row = table.loc[i]
+                self.add_peptide(
+                    row['ModifiedPeptideSequence'],
+                    float(row['PrecursorMz']),
+                    int(row['PrecursorCharge']),
+                    float(row['AverageExperimentalRetentionTime'])
+                )
         elif file.endswith('.parquet'):
             table = pd.read_parquet(file)
-        for i in range(len(table)):
-            row = table.loc[i]
-            self.add_peptide(
-                row['Modified.Sequence'], # should be sequence of fragment
-                float(row['Precursor.Mz']), # should be m/z of fragment
-                int(row['Precursor.Charge']), # should be charge of fragment
-                float(row["RT"])) # should be retention time of fragment
+            for i in range(len(table)):
+                row = table.loc[i]
+                self.add_peptide(
+                    row['Modified.Sequence'], # should be sequence of fragment
+                    float(row['Precursor.Mz']), # should be m/z of fragment
+                    int(row['Precursor.Charge']), # should be charge of fragment
+                    float(row["RT"])) # should be retention time of fragment
 
 
     def process_scan(self, scan):
