@@ -1374,7 +1374,7 @@ def main():
     else:
         num_complex_replications = 0
     print()
-    assert False
+    
     menu_input = None
     while menu_input != 'q':
         show_menu()
